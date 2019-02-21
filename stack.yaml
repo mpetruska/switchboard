@@ -1,0 +1,10 @@
+resolver: lts-13.8
+
+packages:
+- .
+
+extra-deps: [ncurses-0.2.16]
+
+nix:
+  enable: true
+  packages: [ ncurses ]

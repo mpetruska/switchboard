@@ -1,0 +1,22 @@
+name:               switchboard
+version:            0.1.0.0
+homepage:           https://github.com/mpetruska/switchboard
+license:            MIT
+license-file:       LICENSE
+author:             Mark Petruska
+maintainer:         Mark Petruska
+copyright:          2019 Mark Petruska
+category:           Terminal
+build-type:         Simple
+extra-source-files: README.md
+
+executables:
+  switchboard:
+    main:        Main.hs
+    source-dirs: src
+    dependencies:
+      - base >= 4.7 && < 5
+      - ncurses
+    ghc-options:
+      - -Wall
+      - -Werror
