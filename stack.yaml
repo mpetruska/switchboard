@@ -3,8 +3,13 @@ resolver: lts-13.8
 packages:
 - .
 
-extra-deps: [ncurses-0.2.16]
+extra-deps:
+  - aeson-1.4.2.0
+  - ncurses-0.2.16
+  - process-1.6.5.0
+  - transformers-0.5.6.2
+  - yaml-0.11.0.0
 
 nix:
   enable: true
-  packages: [ ncurses ]
+  packages: [ ncurses, zlib ]

@@ -16,7 +16,11 @@ executables:
     source-dirs: src
     dependencies:
       - base >= 4.7 && < 5
+      - aeson
       - ncurses
+      - process
+      - transformers
+      - yaml
     ghc-options:
       - -Wall
       - -Werror
