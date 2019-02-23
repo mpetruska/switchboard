@@ -28,3 +28,7 @@ cabal.project.local~
 
 *~
 \#*\#
+
+# test configuration file
+
+switchboard.yaml
