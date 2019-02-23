@@ -1,7 +1,10 @@
 module Renderer
        ( Colors(..)
        , createColors
+       , mkRenderingState
+       , RenderingState
        , renderWindow
+       , setNeedsRefresh
        ) where
 
 import Prelude hiding (log)
@@ -18,22 +21,36 @@ data Colors = Colors { green  :: ColorID
                      , red    :: ColorID
                      }
 
-renderSwitchState :: Colors -> Integer -> Switch -> Update ()
-renderSwitchState color row switch = do
+data RenderingState = RenderingState { mainWindow          :: Window
+                                     , logBackgroundWindow :: Window
+                                     , logForegroundWindow :: Window
+                                     , colors              :: Colors
+                                     , needsRefresh        :: Bool
+                                     }
+
+mkRenderingState :: Window -> Window -> Window -> Colors -> RenderingState
+mkRenderingState main logBack logFore clrs = RenderingState main logBack logFore clrs True
+
+setNeedsRefresh :: RenderingState -> Bool -> RenderingState
+setNeedsRefresh r x = r { needsRefresh = x }
+
+renderSwitchState :: RenderingState -> Integer -> Switch -> Update ()
+renderSwitchState r row switch = do
       moveCursor row 4
       switchy (state switch)
       setColor defaultColorID
   where
+    color = colors r
     switchy Off = do setColor $ red    color; drawString "[ | off ]"
     switchy On  = do setColor $ green  color; drawString "[ on  | ]"
     switchy _   = do setColor $ yellow color; drawString "[  | |  ]"
 
 
-renderSwitch :: Colors -> Integer -> Integer -> Switch -> Update ()
-renderSwitch color si row switch = do
+renderSwitch :: RenderingState -> Integer -> Integer -> Switch -> Update ()
+renderSwitch r si row switch = do
     moveCursor row 0
     renderSelection $ si == row
-    renderSwitchState color row switch
+    renderSwitchState r row switch
     renderText
   where
     renderSelection True  = drawString "->"
@@ -42,9 +59,9 @@ renderSwitch color si row switch = do
       moveCursor row 15
       drawString $ text switch
 
-renderSwitchboard :: Colors -> Switchboard -> Update ()
-renderSwitchboard color (Switchboard { switches = sw, selected = si }) =
-    forM_ (zip [0..] sw) $ uncurry $ renderSwitch color si
+renderSwitchboard :: RenderingState -> Switchboard -> Update ()
+renderSwitchboard r (Switchboard { switches = sw, selected = si }) =
+    forM_ (zip [0..] sw) $ uncurry $ renderSwitch r si
 
 renderLogBorder :: Update ()
 renderLogBorder = drawBorder d n d n d h v n
@@ -81,15 +98,19 @@ createColors =
                         , red    = defaultColorID
                         }
 
-renderWindow :: Window -> Window -> Window -> Colors -> Switchboard -> Curses ()
-renderWindow w blw logw colors switchboard = do
+renderWindow :: RenderingState -> Switchboard -> Curses ()
+renderWindow renderingState switchboard = do
     if logExtended switchboard
       then do
-        updateWindow w    $ renderSwitchboard colors switchboard
+        updateWindow w    $ renderSwitchboard renderingState switchboard
         updateWindow blw  $ renderLogBorder
         updateWindow logw $ renderLog switchboard
       else do
         updateWindow blw  $ clear
         updateWindow logw $ clear
-        updateWindow w    $ renderSwitchboard colors switchboard
+        updateWindow w    $ renderSwitchboard renderingState switchboard
     render
+  where
+    w    = mainWindow          renderingState
+    blw  = logBackgroundWindow renderingState
+    logw = logForegroundWindow renderingState

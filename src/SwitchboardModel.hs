@@ -41,15 +41,19 @@ progressSwitchState Initializing True  = On
 progressSwitchState Initializing False = Off
 progressSwitchState x            _     = x
 
-updateStartedProcess :: Switch -> StartedProcess -> IO Switch
+updateStartedProcess :: Switch -> StartedProcess -> IO (MayChange Switch)
 updateStartedProcess sw (sp @ StartedProcess { outcome = Nothing }) = do
-    updated <- updateProcess sp
-    pure $ (checkOutcome (outcome updated)) { startedProcess = Just updated }
+    result      <- updateProcess sp
+    let updated =  resultValue result
+    let ch      =  hasChanged result
+    pure $ if ch
+             then changed $ (checkOutcome (outcome updated)) { startedProcess = Just updated }
+             else unchanged sw
   where
     checkOutcome (Just x) = sw { state = progressSwitchState (state sw) x }
     checkOutcome Nothing  = sw
-updateStartedProcess sw _ = pure sw
+updateStartedProcess sw _ = pure $ unchanged sw
 
-updateSwitch :: Switch -> IO Switch
+updateSwitch :: Switch -> IO (MayChange Switch)
 updateSwitch (sw @ Switch { startedProcess = Just sp }) = updateStartedProcess sw sp
-updateSwitch sw = pure sw
+updateSwitch sw = pure $ unchanged sw

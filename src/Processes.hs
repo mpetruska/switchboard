@@ -1,6 +1,11 @@
 module Processes
        ( executeProcess
+       , changed
+       , hasChanged
+       , MayChange
+       , resultValue
        , StartedProcess(..)
+       , unchanged
        , updateProcess
        ) where
 
@@ -16,6 +21,20 @@ data StartedProcess = StartedProcess { handle       :: ProcessHandle
                                      , log          :: String
                                      , outcome      :: Maybe Bool
                                      }
+
+type MayChange a = (a, Bool)
+
+changed :: a -> MayChange a
+changed x = (x, True)
+
+unchanged :: a -> MayChange a
+unchanged x = (x, False)
+
+resultValue :: MayChange a -> a
+resultValue = fst
+
+hasChanged :: MayChange a -> Bool
+hasChanged = snd
 
 executeProcess :: String -> IO StartedProcess
 executeProcess cmd = do
@@ -35,12 +54,16 @@ collectLog h = loop ""
       c <- catch (hGetChar h) (handleExc ' ')
       loop (c : x)
 
-updateProcess :: StartedProcess -> IO StartedProcess
-updateProcess (p @ StartedProcess { outcome = Just _ }) = pure p
+updateProcess :: StartedProcess -> IO (MayChange StartedProcess)
+updateProcess (p @ StartedProcess { outcome = Just _ }) = pure $ unchanged p
 updateProcess (p @ StartedProcess { handle = ph, stdoutHandle = out, stderrHandle = err, log = l }) = do
-    outLog <- collectLog out
-    errLog <- collectLog err
-    m      <- getProcessExitCode ph
-    pure $ p { outcome = (==) ExitSuccess <$> m, log = combineLogs outLog errLog }
-  where
-    combineLogs outLog errLog  = l ++ outLog ++ errLog
+    outLog             <- collectLog out
+    errLog             <- collectLog err
+    m                  <- getProcessExitCode ph
+    let newLogs        =  l ++ outLog ++ errLog
+    let logsChanged    =  not $ and (null <$> [outLog, errLog])
+    let newOutcome     =  (==) ExitSuccess <$> m
+    let outcomeChanged =  newOutcome /= outcome p
+    pure $ if or [logsChanged, outcomeChanged]
+             then changed $ p { outcome = newOutcome, log = newLogs }
+             else unchanged p

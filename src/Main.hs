@@ -17,4 +17,5 @@ runCursesApp switchboard = do
     blw    <- runCurses $ newWindow 0 0 4 30
     logw   <- runCurses $ newWindow 0 0 5 31
     colors <- runCurses createColors
-    loop w blw logw colors switchboard
+    let r  =  mkRenderingState w blw logw colors
+    loop w r switchboard
