@@ -25,9 +25,7 @@ executeProcess cmd = do
     pure $ StartedProcess p out err "" Nothing
 
 collectLog :: Handle -> IO String
-collectLog h = do
-    print "collectLog."
-    loop ""
+collectLog h = loop ""
   where
     handleExc :: a -> IOException -> IO a
     handleExc x  = const $ pure x
@@ -41,11 +39,8 @@ updateProcess :: StartedProcess -> IO StartedProcess
 updateProcess (p @ StartedProcess { outcome = Just _ }) = pure p
 updateProcess (p @ StartedProcess { handle = ph, stdoutHandle = out, stderrHandle = err, log = l }) = do
     outLog <- collectLog out
-    print $ "collected outLog: " ++ outLog
     errLog <- collectLog err
-    print $ "collected errLog: " ++ errLog
     m      <- getProcessExitCode ph
-    print $ "process exit code: " ++ (show m)
     pure $ p { outcome = (==) ExitSuccess <$> m, log = combineLogs outLog errLog }
   where
     combineLogs outLog errLog  = l ++ outLog ++ errLog
