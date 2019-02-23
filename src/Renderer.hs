@@ -77,7 +77,7 @@ renderLog (Switchboard { switches = sw, selected = si }) = do
     drawString logText
   where
     selectedSwitch = snd <$> find (\(i, _) -> i == si) (zip [0..] sw)
-    logText  = fromMaybe "" (log <$> (selectedSwitch >>= startedProcess))
+    logText        = fromMaybe "" (log <$> (selectedSwitch >>= startedProcess))
 
 createColors :: Curses Colors
 createColors =
@@ -99,6 +99,7 @@ createColors =
                         }
 
 renderWindow :: RenderingState -> Switchboard -> Curses ()
+renderWindow (RenderingState { needsRefresh = False }) _ = render
 renderWindow renderingState switchboard = do
     if logExtended switchboard
       then do
