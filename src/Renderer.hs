@@ -46,15 +46,20 @@ renderSwitchboard :: Colors -> Switchboard -> Update ()
 renderSwitchboard color (Switchboard { switches = sw, selected = si }) =
     forM_ (zip [0..] sw) $ uncurry $ renderSwitch color si
 
+renderLogBorder :: Update ()
+renderLogBorder = drawBorder d n d n d h v n
+  where
+    d  = Nothing
+    n  = Just (Glyph ' ' [])
+    h  = Just glyphLineH
+    v  = Just glyphLineV
+
 renderLog :: Switchboard -> Update ()
 renderLog (Switchboard { switches = sw, selected = si }) = do
-    clear
     moveCursor 0 0
     drawString logText
   where
-    selectedSwitch :: Maybe Switch
     selectedSwitch = snd <$> find (\(i, _) -> i == si) (zip [0..] sw)
-    logText :: String
     logText  = fromMaybe "" (log <$> (selectedSwitch >>= startedProcess))
 
 createColors :: Curses Colors
@@ -75,14 +80,6 @@ createColors =
                         , yellow = defaultColorID
                         , red    = defaultColorID
                         }
-
-renderLogBorder :: Update ()
-renderLogBorder = drawBorder d n d n d h v n
-  where
-    d  = Nothing
-    n  = Just (Glyph ' ' [])
-    h  = Just glyphLineH
-    v  = Just glyphLineV
 
 renderWindow :: Window -> Window -> Window -> Colors -> Switchboard -> Curses ()
 renderWindow w blw logw colors switchboard = do

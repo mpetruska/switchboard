@@ -19,3 +19,18 @@ switches:
     initialize: "false"
     on:         "cat src/Renderer.hs"
     off:        "cat src/Processes.hs"
+
+  - title:      test switch dwncwldcklnwdcldcndncwdklcnlkwdcnwndlc
+    initialize: "false"
+    on:         "cat src/Renderer.hs"
+    off:        "cat src/Processes.hs"
+
+  - title:      test switch kdncndwcklnwdclknwdcklnwdkclnwdclkndclnd
+    initialize: "false"
+    on:         "cat src/Renderer.hs"
+    off:        "cat src/Processes.hs"
+
+  - title:      test switch kdncndwcklnwdclknwdcklnwdkclnwdclkndclnd
+    initialize: "false"
+    on:         "cat src/Renderer.hs"
+    off:        "cat src/Processes.hs"

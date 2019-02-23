@@ -20,20 +20,20 @@ data StartedProcess = StartedProcess { handle       :: ProcessHandle
 executeProcess :: String -> IO StartedProcess
 executeProcess cmd = do
     (_, Just out, Just err, p) <- createProcess (shell cmd) { std_out = CreatePipe, std_err = CreatePipe }
-    hSetBuffering out LineBuffering
-    hSetBuffering err LineBuffering
+    hSetBinaryMode out True
+    hSetBinaryMode err True
     pure $ StartedProcess p out err "" Nothing
 
 collectLog :: Handle -> IO String
-collectLog h = loop ""
+collectLog h = do
+    print "collectLog."
+    loop ""
   where
     handleExc :: a -> IOException -> IO a
-    handleExc x      = const $ pure x
-    loop     x       = hIsEOF h >>= loopStep x
-    loopStep x True  = cont x False
-    loopStep x False = catch (hWaitForInput h 0) (handleExc True) >>= cont x
-    cont     x False = pure $ reverse x
-    cont     x True  = do
+    handleExc x  = const $ pure x
+    loop x       = catch (hWaitForInput h 0) (handleExc False) >>= cont x
+    cont x False = pure $ reverse x
+    cont x True  = do
       c <- catch (hGetChar h) (handleExc ' ')
       loop (c : x)
 
@@ -41,8 +41,11 @@ updateProcess :: StartedProcess -> IO StartedProcess
 updateProcess (p @ StartedProcess { outcome = Just _ }) = pure p
 updateProcess (p @ StartedProcess { handle = ph, stdoutHandle = out, stderrHandle = err, log = l }) = do
     outLog <- collectLog out
+    print $ "collected outLog: " ++ outLog
     errLog <- collectLog err
+    print $ "collected errLog: " ++ errLog
     m      <- getProcessExitCode ph
+    print $ "process exit code: " ++ (show m)
     pure $ p { outcome = (==) ExitSuccess <$> m, log = combineLogs outLog errLog }
   where
     combineLogs outLog errLog  = l ++ outLog ++ errLog
