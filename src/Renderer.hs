@@ -77,7 +77,8 @@ renderLog (Switchboard { switches = sw, selected = si }) = do
     drawString logText
   where
     selectedSwitch = snd <$> find (\(i, _) -> i == si) (zip [0..] sw)
-    logText        = fromMaybe "" (log <$> (selectedSwitch >>= startedProcess))
+    takeLastN n    = unlines . reverse . take n . reverse . lines
+    logText        = takeLastN 20 $ fromMaybe "" (log <$> (selectedSwitch >>= startedProcess))
 
 createColors :: Curses Colors
 createColors =
