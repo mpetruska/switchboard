@@ -1,8 +1,7 @@
 # Switchboard
 
 TODO:
-- add -f flag to allow reading switch configurations from other files
-- add -h text
+- add master switch
 - add footer to show available keybindings
 - add description to README
 - add installation instructions

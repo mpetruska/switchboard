@@ -1,7 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Configuration
-       ( loadSwitches
+       ( Arguments(..)
+       , loadSwitches
        , SwitchConfiguration(..)
        ) where
 
@@ -12,6 +13,8 @@ import Data.Yaml
 
 import Processes
 import SwitchboardModel hiding (switches)
+
+data Arguments = Arguments { filename :: String }
 
 data SwitchConfiguration = SwitchConfiguration { title      :: String
                                                , initialize :: String
@@ -41,6 +44,6 @@ createSwitchboard c = do
     sw <- traverse createSwitch (switches c)
     pure $ Switchboard sw 0 False
 
-loadSwitches :: IO (Either Error Switchboard)
-loadSwitches = runExceptT $ withExceptT prettyPrintParseException $
-    (ExceptT $ decodeFileEither "switchboard.yaml") >>= lift . createSwitchboard
+loadSwitches :: Arguments -> IO (Either Error Switchboard)
+loadSwitches a = runExceptT $ withExceptT prettyPrintParseException $
+    (ExceptT $ decodeFileEither (filename a)) >>= lift . createSwitchboard
