@@ -61,12 +61,15 @@ handleEvent _                                      = (<$>)  Just .              
 
 loop :: Window -> RenderingState -> Switchboard -> IO ()
 loop w r switchboard = do
-    ev <- runCurses $ catchCurses (do
-      renderWindow r switchboard
-      getEvent w $ Just 500) handleCursesError
+    (r', ev) <- runCurses $ catchCurses (do
+      r' <- renderWindow r switchboard
+      ev <- getEvent w $ Just 500
+      pure (r', ev)) handleCursesError
     result <- handleEvent ev switchboard
     case result of
-      Just (new, refresh) -> loop w (setNeedsRefresh r refresh) new
+      Just (new, refresh) -> loop w (updateRenderingState ev r' refresh) new
       Nothing             -> pure ()
   where
-    handleCursesError = const $ pure Nothing
+    handleCursesError = const $ pure (r, Nothing)
+    updateRenderingState (Just EventResized) r' _       = setNeedsResize  True    r'
+    updateRenderingState _                   r' refresh = setNeedsRefresh refresh r'
