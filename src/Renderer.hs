@@ -92,9 +92,8 @@ renderLog (Switchboard { switches = sw, selected = si }) = do
                          in  trunc <> replicate (fromInteger cols - (length trunc)) ' '
     cutLine False cols = extend cols
     cutLine True  cols = extend (cols - 1)
-    zero               = (0 :: Integer)
-    cutText rows cols  = concat . reverse . (<$>) (\(i, l) -> cutLine (i == zero) cols l) . zip [0..]
-                       . take (fromInteger rows) . reverse . lines
+    cutText rows cols  = concat . (<$>) (\(i, l) -> cutLine (i == rows) cols l) . zip [1..]
+                       . reverse . take (fromInteger rows) . reverse . lines
     logText rows cols  = cutText rows cols $ fromMaybe "" (log <$> (selectedSwitch >>= startedProcess))
 
 createColors :: Curses Colors
