@@ -32,17 +32,12 @@ type Error = String
 createSwitch :: SwitchConfiguration -> IO Switch
 createSwitch c = do
     sp <- executeProcess $ initialize c
-    pure $ Switch { text           = title c
-                  , state          = Initializing
-                  , startedProcess = Just sp
-                  , onCommand      = on c
-                  , offCommand     = off c
-                  }
+    pure $ mkSwitch  (title c) sp (on c) (off c)
 
 createSwitchboard :: SwitchboardConfiguration -> IO Switchboard
 createSwitchboard c = do
     sw <- traverse createSwitch (switches c)
-    pure $ Switchboard sw 0 False
+    pure $ mkSwitchboard sw
 
 loadSwitches :: Arguments -> IO (Either Error Switchboard)
 loadSwitches a = runExceptT $ withExceptT prettyPrintParseException $

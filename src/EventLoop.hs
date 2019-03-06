@@ -8,43 +8,6 @@ import Processes
 import Renderer
 import SwitchboardModel
 
-flipSwitch :: Switchboard -> IO Switchboard
-flipSwitch (board @ Switchboard { switches = sw, selected = si }) = do
-    newSwitches <- traverse (uncurry flipSelected) (zip [0..] sw)
-    pure $ board { switches = newSwitches }
-  where
-    runProcess switch On  = Just <$> (executeProcess $ offCommand switch)
-    runProcess switch Off = Just <$> (executeProcess $  onCommand switch)
-    runProcess _      _   = pure Nothing
-    performSwitch switch  = do
-      sp <- runProcess switch $ state switch
-      pure $ switch  { state = flipSwitchState $ state switch
-                     , startedProcess = firstJust sp (startedProcess switch) }
-    flipSelected i switch
-      | i == si   = performSwitch switch
-      | otherwise = pure switch
-    firstJust x @ (Just _) _ = x
-    firstJust _            y = y
-
-update :: Switchboard -> IO (MayChange Switchboard)
-update (board @ Switchboard { switches = sw }) = do
-    result          <- traverse updateSwitch sw
-    let newSwitches =     resultValue <$> result
-    let ch          =  or (hasChanged <$> result)
-    pure $ if ch
-             then changed $ board { switches = newSwitches }
-             else unchanged board
-
-selectNext :: Switchboard -> Switchboard
-selectNext sw
-    | (selected sw) + 1 < (toInteger $ length $ switches sw) = sw { selected = (selected sw) + 1 }
-    | otherwise                                              = sw
-
-selectPrevious :: Switchboard -> Switchboard
-selectPrevious sw
-    | (selected sw) > 0 = sw { selected = (selected sw) - 1 }
-    | otherwise         = sw
-
 toggleLog :: Switchboard -> Switchboard
 toggleLog s = s { logExtended = not (logExtended s) }
 
