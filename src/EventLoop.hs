@@ -33,6 +33,6 @@ loop w r switchboard = do
       Just (new, refresh) -> loop w (updateRenderingState ev r' refresh) new
       Nothing             -> pure ()
   where
-    handleCursesError = const $ pure (r, Nothing)
+    handleCursesError = const $ return (r, Nothing)
     updateRenderingState (Just EventResized) r' _       = setNeedsResize  True    r'
     updateRenderingState _                   r' refresh = setNeedsRefresh refresh r'

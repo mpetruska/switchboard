@@ -31,8 +31,14 @@ data RenderingState = RenderingState { mainWindow          :: Window
                                      , needsResize         :: Bool
                                      }
 
-instance Show RenderingState where
-  show r = show (needsRefresh r) <> show (needsResize r)
+offString :: String
+offString          = "[ | | off ]"
+
+onString :: String
+onString           = "[  on | | ]"
+
+intermediateString :: String
+intermediateString = "[   | |   ]"
 
 mkRenderingState :: Window -> Window -> Window -> Colors -> RenderingState
 mkRenderingState main logBack logFore clrs = RenderingState main logBack logFore clrs True False
@@ -47,20 +53,22 @@ createColors :: Curses Colors
 createColors =
     maxColorID >>= assembleColors
   where
+    createNewColors m = do
+      colorGreen   <- newColorID ColorGreen  ColorDefault (m - 2)
+      colorYellow  <- newColorID ColorYellow ColorDefault (m - 1)
+      colorRed     <- newColorID ColorRed    ColorDefault m
+      return $ Colors { green  = colorGreen
+                      , yellow = colorYellow
+                      , red    = colorRed
+                      }
+    createFakeColors =
+      return $ Colors { green  = defaultColorID
+                      , yellow = defaultColorID
+                      , red    = defaultColorID
+                      }
     assembleColors m
-      | m >= 16 = do
-          colorGreen   <- newColorID ColorGreen  ColorDefault (m - 2)
-          colorYellow  <- newColorID ColorYellow ColorDefault (m - 1)
-          colorRed     <- newColorID ColorRed    ColorDefault m
-          pure $ Colors { green  = colorGreen
-                        , yellow = colorYellow
-                        , red    = colorRed
-                        }
-      | otherwise =
-          pure $ Colors { green  = defaultColorID
-                        , yellow = defaultColorID
-                        , red    = defaultColorID
-                        }
+      | m >= 16   = catchCurses (createNewColors m) (const createFakeColors)
+      | otherwise = createFakeColors
 
 createWindows :: Curses (Window, Window, Window)
 createWindows = do
@@ -80,15 +88,15 @@ renderMasterSwitchState r m = do
     setColor defaultColorID
   where
     color         = colors r
-    switchy False = do setColor $ red    color; drawString "[ | off ]"
-    switchy True  = do setColor $ green  color; drawString "[ on  | ]"
+    switchy False = do setColor $ red    color; drawString offString
+    switchy True  = do setColor $ green  color; drawString  onString
 
 renderMasterSwitch :: RenderingState -> SelectedSwitch -> MasterSwitch -> Update ()
 renderMasterSwitch r si m = do
     moveCursor 0 0
     renderSelection $ si == MasterSelected
     renderMasterSwitchState r m
-    moveCursor 0 15
+    moveCursor 0 17
     drawString "Master"
 
 renderSwitchState :: RenderingState -> Integer -> Switch -> Update ()
@@ -98,9 +106,9 @@ renderSwitchState r row switch = do
     setColor defaultColorID
   where
     color = colors r
-    switchy Off = do setColor $ red    color; drawString "[ | off ]"
-    switchy On  = do setColor $ green  color; drawString "[ on  | ]"
-    switchy _   = do setColor $ yellow color; drawString "[  | |  ]"
+    switchy Off = do setColor $ red    color; drawString          offString
+    switchy On  = do setColor $ green  color; drawString           onString
+    switchy _   = do setColor $ yellow color; drawString intermediateString
 
 renderSwitch :: RenderingState -> SelectedSwitch -> Integer -> Switch -> Update ()
 renderSwitch r si i switch = do
@@ -111,9 +119,9 @@ renderSwitch r si i switch = do
     renderText (fromInteger cols)
   where
     row             = i + 2
-    title      cols = take (cols - 15) $ text switch
+    title      cols = take (cols - 17) $ text switch
     renderText cols = do
-      moveCursor row 15
+      moveCursor row 17
       drawString $ title cols
 
 renderSwitchboard :: RenderingState -> Switchboard -> Update ()
