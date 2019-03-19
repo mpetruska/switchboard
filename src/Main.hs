@@ -1,10 +1,26 @@
-import Options.Applicative
-import UI.NCurses
+import Options.Applicative ( (<**>)
+                           , execParser
+                           , fullDesc
+                           , header
+                           , help
+                           , helper
+                           , info
+                           , long
+                           , metavar
+                           , Parser
+                           , ParserInfo
+                           , progDesc
+                           , short
+                           , showDefault
+                           , strOption
+                           , value
+                           )
+import UI.NCurses          ( CursorMode(CursorInvisible), runCurses, setCursorMode, setEcho )
 
-import Configuration
-import EventLoop
-import Renderer
-import SwitchboardModel
+import Configuration       ( Arguments(Arguments), loadSwitches )
+import EventLoop           ( loop )
+import Renderer            ( createColors, createWindows, mkRenderingState )
+import SwitchboardModel    ( Switchboard )
 
 argumentsParser :: Parser Arguments
 argumentsParser =

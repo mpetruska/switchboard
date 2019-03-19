@@ -15,11 +15,20 @@ module SwitchboardModel
        , updateSwitch
        ) where
 
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Maybe
-import Data.Foldable
+import Control.Monad.Trans.Class ( lift )
+import Control.Monad.Trans.Maybe ( MaybeT(..), runMaybeT )
+import Data.Foldable             ( foldlM )
 
-import Processes
+import Processes                 ( changed
+                                 , executeProcess
+                                 , hasChanged
+                                 , MayChange
+                                 , outcome
+                                 , resultValue
+                                 , StartedProcess(..)
+                                 , unchanged
+                                 , updateProcess
+                                 )
 
 data SwitchState = Initializing
                  | Off

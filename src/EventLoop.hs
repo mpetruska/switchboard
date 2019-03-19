@@ -2,11 +2,17 @@ module EventLoop
        ( loop
        ) where
 
-import UI.NCurses
+import UI.NCurses       ( catchCurses
+                        , Event(EventCharacter, EventSpecialKey, EventResized)
+                        , getEvent
+                        , Key(KeyDownArrow, KeyEnter, KeyLeftArrow, KeyRightArrow, KeyUpArrow)
+                        , runCurses
+                        , Window
+                        )
 
-import Processes
-import Renderer
-import SwitchboardModel
+import Processes        ( changed, MayChange )
+import Renderer         ( RenderingState, renderWindow, setNeedsRefresh, setNeedsResize )
+import SwitchboardModel ( flipSwitch, logExtended, selectNext, selectPrevious, Switchboard, update )
 
 toggleLog :: Switchboard -> Switchboard
 toggleLog s = s { logExtended = not (logExtended s) }

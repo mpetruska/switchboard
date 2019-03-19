@@ -9,11 +9,11 @@ module Processes
        , updateProcess
        ) where
 
-import Prelude hiding (log)
-import Control.Exception (catch, IOException)
-import GHC.IO.Handle
-import System.Exit
-import System.Process
+import Prelude           hiding ( log )
+import Control.Exception ( catch, IOException )
+import GHC.IO.Handle     ( Handle, hGetChar, hSetBinaryMode, hWaitForInput )
+import System.Exit       ( ExitCode(ExitSuccess) )
+import System.Process    ( createProcess, getProcessExitCode, ProcessHandle, shell, std_out, std_err, StdStream(CreatePipe) )
 
 data StartedProcess = StartedProcess { handle       :: ProcessHandle
                                      , stdoutHandle :: Handle

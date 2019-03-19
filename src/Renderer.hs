@@ -9,14 +9,47 @@ module Renderer
        , setNeedsResize
        ) where
 
-import Prelude hiding (log)
-import Control.Monad
-import Data.List
-import Data.Maybe
-import UI.NCurses
+import Prelude          hiding ( log )
+import Control.Monad    ( forM_ )
+import Data.List        ( find )
+import Data.Maybe       ( fromMaybe )
+import UI.NCurses       ( catchCurses
+                        , clear
+                        , closeWindow
+                        , Color(ColorDefault, ColorGreen, ColorRed, ColorYellow)
+                        , ColorID
+                        , Curses
+                        , defaultColorID
+                        , defaultWindow
+                        , drawBorder
+                        , drawString
+                        , Glyph(Glyph)
+                        , glyphLineH
+                        , glyphLineV
+                        , maxColorID
+                        , moveCursor
+                        , newColorID
+                        , newWindow
+                        , render
+                        , setColor
+                        , Update
+                        , updateWindow
+                        , Window
+                        , windowSize
+                        )
 
-import Processes
-import SwitchboardModel
+import Processes        ( log )
+import SwitchboardModel ( isOn
+                        , MasterSwitch
+                        , SelectedSwitch(..)
+                        , startedProcess
+                        , state
+                        , Switch
+                        , Switchboard(..)
+                        , switchesControlled
+                        , SwitchState(..)
+                        , text
+                        )
 
 data Colors = Colors { green  :: ColorID
                      , yellow :: ColorID
@@ -39,6 +72,9 @@ onString           = "[  on | | ]"
 
 intermediateString :: String
 intermediateString = "[   | |   ]"
+
+footerString :: String
+footerString = " up, down: select switch | left, right, space: flip switch | l: show switch log | q: quit "
 
 mkRenderingState :: Window -> Window -> Window -> Colors -> RenderingState
 mkRenderingState main logBack logFore clrs = RenderingState main logBack logFore clrs True False
@@ -72,14 +108,22 @@ createColors =
 
 createWindows :: Curses (Window, Window, Window)
 createWindows = do
-    w      <- defaultWindow
-    blw    <- newWindow 0 0 4 30
-    logw   <- newWindow 0 0 5 31
-    pure (w, blw, logw)
+    w            <- defaultWindow
+    (rows, cols) <- updateWindow w $ windowSize
+    blw          <- createBlw  rows cols
+    logw         <- createLogw rows cols
+    return (w, blw, logw)
+  where
+    createBlw rows cols
+      | rows > 5 && cols > 31 = newWindow 0 0 4 30
+      | otherwise             = newWindow 0 0 0 0
+    createLogw rows cols
+      | rows > 5 && cols > 31 = newWindow 0 0 5 31
+      | otherwise             = newWindow 0 0 1 1
 
 renderSelection :: Bool -> Update ()
 renderSelection True  = drawString "->"
-renderSelection False = drawString "  "
+renderSelection False = return ()
 
 renderMasterSwitchState :: RenderingState -> MasterSwitch -> Update ()
 renderMasterSwitchState r m = do
@@ -126,8 +170,18 @@ renderSwitch r si i switch = do
 
 renderSwitchboard :: RenderingState -> Switchboard -> Update ()
 renderSwitchboard r (Switchboard { masterSwitch = m, switches = sw, selected = si }) = do
+    clear
+    (rows, cols) <- windowSize
     renderMasterSwitch r si m
-    forM_ (zip [0..] sw) $ uncurry $ renderSwitch r si
+    let swcut = take ((fromInteger rows) - 3) sw
+    forM_ (zip [0..] swcut) $ uncurry $ renderSwitch r si
+    drawFooter (rows > 2) rows cols
+  where
+    drawFooter True rows cols = do
+      moveCursor (rows - 1) 0
+      drawString $ take ((fromInteger cols) - 1) footerString
+    drawFooter False _ _ =
+      return ()
 
 renderLogBorder :: Update ()
 renderLogBorder = drawBorder d n d n d h v n
@@ -177,7 +231,7 @@ renderWindow renderingState switchboard = do
         updateWindow logw $ clear
         updateWindow w    $ renderSwitchboard renderingState switchboard
     render
-    pure $ renderingState { needsRefresh = False }
+    return $ setNeedsRefresh False renderingState
   where
     w    = mainWindow          renderingState
     blw  = logBackgroundWindow renderingState

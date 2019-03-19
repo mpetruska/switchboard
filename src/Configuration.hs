@@ -6,13 +6,13 @@ module Configuration
        , SwitchConfiguration(..)
        ) where
 
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Except
-import Data.Aeson.TH
-import Data.Yaml
+import Control.Monad.Trans.Class  ( lift )
+import Control.Monad.Trans.Except ( ExceptT(ExceptT), runExceptT, withExceptT )
+import Data.Aeson.TH              ( defaultOptions, deriveJSON )
+import Data.Yaml                  ( decodeFileEither, prettyPrintParseException )
 
-import Processes
-import SwitchboardModel hiding (switches)
+import Processes                  ( executeProcess )
+import SwitchboardModel           ( mkSwitch, mkSwitchboard, Switch, Switchboard )
 
 data Arguments = Arguments { filename :: String }
 
