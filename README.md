@@ -28,7 +28,7 @@ switches.
 
 ## Keybindings
 
-|                     |                              |
+| Key                 | Command                      |
 |---------------------|------------------------------|
 | up/down             | select previous/next switch  |
 | left, right, space  | flip selected switch         |
