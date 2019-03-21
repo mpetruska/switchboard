@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mpetruska/switchboard.svg?branch=master)](https://travis-ci.org/mpetruska/switchboard)
+
 # Switchboard
 
 Control your computer configuration, VPNs, virtual machines via
