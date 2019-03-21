@@ -9,8 +9,7 @@ cache:
 addons:
   apt:
     packages:
-      - ncurses
-      - zlib
+      - libncurses-dev
 
 before_install:
 - mkdir -p ~/.local/bin
