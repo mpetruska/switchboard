@@ -1,0 +1,25 @@
+sudo: false
+
+language: generic
+
+cache:
+  directories:
+  - $HOME/.stack
+
+# Ensure necessary system libraries are present
+addons:
+  apt:
+    packages:
+      - ncurses
+      - zlib
+
+before_install:
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
+install:
+- stack --no-nix --no-terminal --install-ghc test --only-dependencies
+
+script:
+- stack --no-nix --no-terminal build
